@@ -5,7 +5,6 @@ import numpy as np
 
 from .wave import Wave
 
-
 # type alias
 type SineWaveParamType = SineWaveParam | tuple[int, float] | tuple[int, float, float]
 
@@ -45,17 +44,20 @@ class SineWave(Wave):
         assert fs > 0
 
         self.param = _convert_param(param)
-        self.duration = duration
-        self.fs = fs
-
-    def _generate_time_axis(self) -> np.ndarray:
-        return np.linspace(
-            0, self.duration, int(self.fs * self.duration), endpoint=False
-        )
+        self._duration = duration
+        self._fs = fs
 
     def generate(self) -> np.ndarray:
-        t = self._generate_time_axis()
+        t = self.generate_time_axis()
         return self.param.amplitude * np.sin(2 * np.pi * self.param.frequency * t + self.param.phase)
+
+    @property
+    def duration(self) -> float:
+        return self._duration
+
+    @property
+    def fs(self) -> int:
+        return self._fs
 
 
 class CompositeWave(Wave):
@@ -68,17 +70,12 @@ class CompositeWave(Wave):
         assert len(params) > 0
 
         self.params = list(map(lambda p: _convert_param(p), params))
-        self.duration = duration
-        self.fs = fs
-
-    def _generate_time_axis(self) -> np.ndarray:
-        return np.linspace(
-            0, self.duration, int(self.fs * self.duration), endpoint=False
-        )
+        self._duration = duration
+        self._fs = fs
 
     def generate(self) -> np.ndarray:
-        sample_count = int(self.fs * self.duration)
-        t = self._generate_time_axis()
+        sample_count = int(self._fs * self._duration)
+        t = self.generate_time_axis()
         wave = np.zeros(sample_count)
 
         for param in self.params:
@@ -86,3 +83,11 @@ class CompositeWave(Wave):
             wave += w
 
         return wave
+
+    @property
+    def duration(self) -> float:
+        return self._duration
+
+    @property
+    def fs(self) -> int:
+        return self._fs
